@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UCP Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    input[type="number"] { width: 60px; }
+    .section { margin-bottom: 40px; }
+    .result { font-size: 1.2em; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>UCP Calculator</h1>
+
+  <div class="section">
+    <h2>1. Unadjusted Use Case Points (UUCP)</h2>
+    <label>UAW (Actor Weight): <input type="number" id="uaw" value="10" /></label><br/>
+    <label>UUCW (Use Case Weight): <input type="number" id="uucw" value="30" /></label><br/>
+    <p>UUCP = UAW + UUCW</p>
+    <p><strong>UUCP: <span id="uucp">40</span></strong></p>
+  </div>
+
+  <div class="section">
+    <h2>2. Technical Factors (13 yếu tố kỹ thuật)</h2>
+    <table>
+      <thead>
+        <tr><th>Yếu tố</th><th>Trọng số</th><th>Điểm (0-5)</th></tr>
+      </thead>
+      <tbody id="technical-factors"></tbody>
+    </table>
+    <p>Tổng điểm kỹ thuật có trọng số: <span id="tech-total">0</span></p>
+    <p>TCF = 0.6 + 0.01 × Tổng</p>
+    <p><strong>TCF: <span id="tcf">0.60</span></strong></p>
+  </div>
+
+  <div class="section">
+    <h2>3. Environmental Factors (8 yếu tố môi trường)</h2>
+    <table>
+      <thead>
+        <tr><th>Yếu tố</th><th>Trọng số</th><th>Điểm (0-5)</th></tr>
+      </thead>
+      <tbody id="env-factors"></tbody>
+    </table>
+    <p>Tổng điểm môi trường có trọng số: <span id="env-total">0</span></p>
+    <p>EF = 1.4 + (-0.03 × Tổng)</p>
+    <p><strong>EF: <span id="ef">1.40</span></strong></p>
+  </div>
+
+  <div class="section">
+    <h2>4. Use Case Points (UCP)</h2>
+    <p>UCP = UUCP × TCF × EF</p>
+    <p class="result">UCP: <span id="ucp">0.00</span></p>
+  </div>
+
+  <script>
+    const technicalFactors = [
+      ["Hệ thống phân tán", 2.0],
+      ["Hiệu suất yêu cầu cao", 1.0],
+      ["Hiệu quả xử lý giao dịch", 1.0],
+      ["Khả năng sử dụng lại", 1.0],
+      ["Dễ cài đặt", 0.5],
+      ["Khả năng sử dụng", 0.5],
+      ["Tính di động", 2.0],
+      ["Khả năng thay đổi", 1.0],
+      ["Giao tiếp đồng thời", 1.0],
+      ["Tính bảo mật", 1.0],
+      ["Truy cập bên thứ ba", 1.0],
+      ["Yêu cầu đào tạo đặc biệt", 1.0],
+      ["Hệ thống thân thiện", 1.0]
+    ];
+
+    const envFactors = [
+      ["Kinh nghiệm lập trình", 1.5],
+      ["Kinh nghiệm ứng dụng", 0.5],
+      ["Mức độ ổn định yêu cầu", 1.0],
+      ["Kỹ năng phân tích", 0.5],
+      ["Kinh nghiệm với mô hình UCP", 1.0],
+      ["Sử dụng công cụ phát triển", 0.5],
+      ["Mức độ phát triển theo chuẩn", 1.0],
+      ["Sự hỗ trợ của khách hàng", 2.0]
+    ];
+
+    function renderFactors(id, factors) {
+      const tbody = document.getElementById(id);
+      tbody.innerHTML = "";
+      factors.forEach(([label, weight], i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${label}</td><td>${weight}</td><td><input type='number' min='0' max='5' value='0' step='1' data-weight='${weight}' class='${id}-input' /></td>`;
+        tbody.appendChild(row);
+      });
+    }
+
+    function sumWeightedValues(selector) {
+      let total = 0;
+      document.querySelectorAll(selector).forEach(input => {
+        const score = parseFloat(input.value);
+        const weight = parseFloat(input.dataset.weight);
+        total += score * weight;
+      });
+      return total;
+    }
+
+    function updateAll() {
+      const uaw = parseFloat(document.getElementById("uaw").value);
+      const uucw = parseFloat(document.getElementById("uucw").value);
+      const uucp = uaw + uucw;
+      document.getElementById("uucp").textContent = uucp.toFixed(2);
+
+      const techTotal = sumWeightedValues(".technical-factors-input, .technical-factors input");
+      document.getElementById("tech-total").textContent = techTotal.toFixed(2);
+      const tcf = 0.6 + 0.01 * techTotal;
+      document.getElementById("tcf").textContent = tcf.toFixed(2);
+
+      const envTotal = sumWeightedValues(".env-factors-input, .env-factors input");
+      document.getElementById("env-total").textContent = envTotal.toFixed(2);
+      const ef = 1.4 - 0.03 * envTotal;
+      document.getElementById("ef").textContent = ef.toFixed(2);
+
+      const ucp = uucp * tcf * ef;
+      document.getElementById("ucp").textContent = ucp.toFixed(2);
+    }
+
+    renderFactors("technical-factors", technicalFactors);
+    renderFactors("env-factors", envFactors);
+
+    document.querySelectorAll("input").forEach(input => {
+      input.addEventListener("input", updateAll);
+    });
+
+    document.addEventListener("input", updateAll);
+    updateAll();
+  </script>
+</body>
+</html>
